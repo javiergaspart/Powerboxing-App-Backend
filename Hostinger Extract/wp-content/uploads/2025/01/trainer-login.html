@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainer Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 100px;
+        }
+        input, button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Trainer Login</h2>
+    <form id="loginForm">
+        <input type="email" id="email" placeholder="Enter Email" required />
+        <input type="password" id="password" placeholder="Enter Password" required />
+        <button type="submit">Login</button>
+    </form>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('http://localhost:8080/fitboxing/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (response.ok) {
+                alert('Login Successful');
+                window.location.href = 'trainer-dashboard.html'; // Redirect to dashboard
+            } else {
+                alert('Invalid login credentials');
+            }
+        });
+    </script>
+</body>
+</html>

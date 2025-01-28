@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Boxing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Reset */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto Condensed', sans-serif;
+            background-color: #2E003E; /* Matches the purple used outside */
+            color: #F8F8FF;
+        }
+
+        /* Background Logo Top Center */
+        .background-logo-top {
+            position: fixed;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 150px;
+            background: url('Powerboxing_Logo_Exact_Accent.png') no-repeat center center;
+            background-size: contain;
+            z-index: 1000; /* Ensure it stays above other elements */
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 100px 20px;
+            background: url('background_female_boxer.png') no-repeat center center;
+            background-size: cover;
+        }
+        .hero img {
+            height: 100px;
+            margin-bottom: 20px;
+        }
+        .hero h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 72px;
+            color: #7FFF00;
+            margin-bottom: 20px;
+        }
+        .hero p {
+            font-size: 18px;
+            color: #F8F8FF;
+            margin-bottom: 40px;
+        }
+        .hero button {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 16px;
+            padding: 10px 20px;
+            background-color: #7FFF00;
+            color: #1A1A1A;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .hero button:hover {
+            background-color: #A5E22B;
+        }
+
+        /* Features Section */
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 50px 20px;
+            background-color: rgba(43, 43, 79, 0.9);
+        }
+        .card {
+            background: #1C1C1C;
+            border: 1px solid #303030;
+            border-radius: 10px;
+            padding: 20px;
+            color: #F8F8FF;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .card img {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Video Section */
+        .video-section {
+            padding: 50px 20px;
+            background-color: rgba(26, 26, 26, 0.9);
+            text-align: center;
+        }
+        .video-section iframe {
+            width: 80%;
+            height: 400px;
+            border: none;
+            border-radius: 10px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: rgba(26, 26, 26, 0.9);
+            padding: 20px;
+            text-align: center;
+            color: #8A2BE2;
+            font-size: 14px;
+        }
+        footer a {
+            color: #7FFF00;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-logo-top"></div>
+
+    <section class="hero">
+        <img src="logo.png" alt="Power Boxing Logo">
+        <h1>Power Boxing</h1>
+        <p>Unleash your potential with energetic training sessions and innovative tools.</p>
+        <button>Join Now</button>
+    </section>
+    <section class="features">
+        <div class="card">
+            <img src="boxing_rounds.png" alt="Boxing Rounds">
+            <h2>Boxing Rounds</h2>
+            <p>Precision and power with guided boxing rounds.</p>
+        </div>
+        <div class="card">
+            <img src="functional_training.png" alt="Functional Training">
+            <h2>Functional Training</h2>
+            <p>Agility and strength with kettlebell circuits.</p>
+        </div>
+        <div class="card">
+            <img src="iot_punch_bags.png" alt="IoT Punch Bags">
+            <h2>IoT Punch Bags</h2>
+            <p>Smart tools to track your performance.</p>
+        </div>
+    </section>
+    <section class="video-section">
+        <h2>Watch Our Training Video</h2>
+        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+    </section>
+    <footer>
+        <p>&copy; 2024 Power Boxing. All rights reserved. | <a href="#">Privacy Policy</a></p>
+    </footer>
+</body>
+</html>
+
+

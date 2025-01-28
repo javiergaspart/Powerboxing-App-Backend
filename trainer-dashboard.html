@@ -1,0 +1,34 @@
+<script>
+    document.getElementById('trainerLoginForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('http://localhost:8080/fitboxing/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                localStorage.setItem('trainerToken', result.token);
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            } else {
+                alert(result.error);
+            }
+        } catch (error) {
+            alert('Failed to connect to server');
+        }
+    });
+
+    function logout() {
+        localStorage.removeItem('trainerToken');
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'block';
+    }
+</script>
