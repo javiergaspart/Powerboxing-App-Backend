@@ -1,57 +1,18 @@
 const mongoose = require('mongoose');
 
-const sessionSchema = new mongoose.Schema({
-  date: {
-    type: Date,
-    required: true,
-  },
-  slotTimings: {
-    type: String,
-    required: true,
-    enum: [
-      '9:00 AM', '9:30 AM',
-      '10:00 AM', '10:30 AM',
-      '11:00 AM', '11:30 AM',
-      '12:00 PM', '12:30 PM',
-      '1:00 PM', '1:30 PM',
-      '2:00 PM', '2:30 PM',
-      '3:00 PM', '3:30 PM',
-      '4:00 PM', '4:30 PM',
-      '5:00 PM', '5:30 PM',
-      '6:00 PM'
+const SessionSchema = new mongoose.Schema({
+    session_id: { type: String, required: true, unique: true },
+    date: { type: Date, required: true },
+    time: { type: String, required: true },
+    trainer_id: { type: String, required: true },
+    boxers: [
+        {
+            boxer_id: { type: String, required: true },
+            station_id: { type: String, required: true },
+            status: { type: String, default: "confirmed" }
+        }
     ],
-    validate: {
-      validator: function (v) {
-        return /\d{1,2}:\d{2} (AM|PM)/.test(v); // Regex for validating time formats
-      },
-      message: '{VALUE} is not a valid time slot!',
-    },
-  },
-  location: {
-    type: String,
-    required: true,
-  },
-  instructor: {
-    type: String,
-  },
-  bookedUsers: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
-  ],
-  punchingBags: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'PunchingBag',
-    },
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+    status: { type: String, default: "upcoming" }
 });
 
-const Session = mongoose.model('Session', sessionSchema);
-
-module.exports = Session;
+module.exports = mongoose.model('Session', SessionSchema);

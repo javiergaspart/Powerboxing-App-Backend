@@ -1,29 +1,23 @@
-require('dotenv').config();
 const express = require('express');
-const connectDB = require('./config/db');
+const mongoose = require('mongoose');
 const cors = require('cors');
+require('dotenv').config();
+
+const sessionRoutes = require('./src/routes/sessions'); // Updated path
+const authRoutes = require('./src/routes/auth'); // Updated path
 
 const app = express();
-
-// Middleware
 app.use(express.json());
 app.use(cors());
 
-// Connect to MongoDB
-connectDB();
+app.use('/api/sessions', sessionRoutes);
+app.use('/api/auth', authRoutes);
 
-// Import Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/sessions', require('./routes/sessions')); // ✅ Updated Session Routes
-app.use('/api/iot', require('./routes/iot')); // ✅ IoT Routes
-
-// Default Route
-app.get('/', (req, res) => {
-    res.send('Powerboxing API is running...');
-});
-
-// Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-});
+
+mongoose
+    .connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('✅ MongoDB Connected Successfully'))
+    .catch((err) => console.error('❌ MongoDB Connection Failed:', err));
+
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
