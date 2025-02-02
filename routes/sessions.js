@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Session = require('../models/Session');
-const authMiddleware = require('../middleware/authMiddleware'); // Corrected path
+const authMiddleware = require('../middleware/authMiddleware'); // ✅ Correct path
 
-// Start a session
+// ✅ Start a session
 router.post('/start', authMiddleware, async (req, res) => {
     try {
         const { session_id } = req.body;
@@ -19,6 +19,16 @@ router.post('/start', authMiddleware, async (req, res) => {
         session.status = "active";
         await session.save();
         res.json({ message: "Session started successfully", session });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+});
+
+// ✅ Get all sessions
+router.get('/', authMiddleware, async (req, res) => {
+    try {
+        const sessions = await Session.find();
+        res.json(sessions);
     } catch (error) {
         res.status(500).json({ message: "Server error", error });
     }
