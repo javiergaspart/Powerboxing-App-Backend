@@ -3,11 +3,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-// Import routes
-const sessionRoutes = require('./src/routes/sessions'); // Correct path
-const authRoutes = require('./src/routes/auth'); // Correct path
+// Import routes (Corrected paths)
+const sessionRoutes = require('./routes/sessions');
+const authRoutes = require('./routes/auth');
 
-// Initialize app
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -20,7 +19,6 @@ app.get('/', (req, res) => {
     res.send('Powerboxing API is running...');
 });
 
-// MongoDB Connection
 const PORT = process.env.PORT || 5000;
 
 mongoose
@@ -31,5 +29,4 @@ mongoose
     .then(() => console.log('✅ MongoDB Connected Successfully'))
     .catch((err) => console.error('❌ MongoDB Connection Failed:', err));
 
-// Start Server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
