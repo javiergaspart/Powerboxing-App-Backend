@@ -7,19 +7,20 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// ✅ Import API routes (Ensure correct paths)
+// ✅ Import API routes
+const authRoutes = require('./routes/auth'); // <-- Ensure this exists
 const sessionRoutes = require('./routes/sessions');
-const authRoutes = require('./routes/auth');
 
-app.use('/api/sessions', sessionRoutes);
+// ✅ REGISTER API ROUTES
 app.use('/api/auth', authRoutes);
+app.use('/api/sessions', sessionRoutes);
 
-// ✅ Root route to check if the server is running
+// ✅ Root route for debugging
 app.get('/', (req, res) => {
     res.send('Powerboxing API is running...');
 });
 
-// ✅ DEBUG: Log all registered routes
+// ✅ Log registered routes (for debugging)
 const listEndpoints = require('express-list-endpoints');
 console.log('📌 Registered API Routes:', listEndpoints(app));
 
