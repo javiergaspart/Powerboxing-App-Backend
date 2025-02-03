@@ -35,7 +35,7 @@ app.get("/api/debug", (req, res) => {
 
 // ✅ MongoDB Connection
 mongoose
-  .connect("mongodb+srv://USERNAME:PASSWORD@cluster0.mongodb.net/powerboxing?retryWrites=true&w=majority", {
+  .connect("mongodb+srv://Fitboxing_admin:Powerboxing123@cluster0.mongodb.net/powerboxing?retryWrites=true&w=majority", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
