@@ -1,25 +1,36 @@
 const express = require("express");
 const path = require("path");
-const router = express.Router();
 const authMiddleware = require(path.join(__dirname, "../middlewares/auth"));
-const Session = require(path.join(__dirname, "../models/session")); // 🔥 FIXED PATH
+const Session = require(path.join(__dirname, "../models/session"));
 
-// Start Session Route
-router.post("/start", authMiddleware, async (req, res) => {
-  try {
-    const { session_id } = req.body;
-    const session = await Session.findOneAndUpdate(
-      { session_id },
-      { $set: { status: "active" } },
-      { new: true }
-    );
+const router = express.Router();
 
-    if (!session) return res.status(404).json({ message: "Session not found" });
+// ✅ DEBUG LOGGING
+console.log("✅ Sessions route loaded");
 
-    res.json({ message: "Session started", session });
-  } catch (err) {
-    res.status(500).json({ message: "Server Error" });
-  }
+// @route   GET /api/sessions/test
+// @desc    Test sessions route
+// @access  Public
+router.get("/test", (req, res) => {
+    console.log("✅ Sessions route test successful");
+    res.json({ message: "Sessions route is active" });
 });
 
+// @route   POST /api/sessions/start
+// @desc    Start a new session
+// @access  Private
+router.post("/start", authMiddleware, async (req, res) => {
+    console.log("🔹 Start session route hit");
+
+    try {
+        const newSession = new Session(req.body);
+        await newSession.save();
+        res.json(newSession);
+    } catch (error) {
+        console.error("🚨 Server error:", error.message);
+        res.status(500).send("Server error");
+    }
+});
+
+// ✅ Export Correctly
 module.exports = router;
