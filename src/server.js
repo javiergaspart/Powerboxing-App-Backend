@@ -1,16 +1,23 @@
-// src/server.js
+require('dotenv').config(); // Load environment variables at the top
+const express = require('express');
+const connectDB = require('./config/db');
+const cors = require('cors');
 
-const app = require('./app'); // Import the app
-const dotenv = require('dotenv');
+const app = express();
 
-// Load environment variables
-dotenv.config();
+// Middleware
+app.use(express.json());
+app.use(cors());
 
-// Set the port from environment variable or default to 5000
-const PORT = process.env.PORT || 5000;
+// Connect to MongoDB
+connectDB();
 
-// Start the server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log("\x1b[32m"+ `Server is running on http://0.0.0.0:${PORT}`+ "\x1b[0m");
+// Default Route
+app.get('/', (req, res) => {
+    res.send('Powerboxing API is running...');
 });
 
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});
