@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-// ✅ Import routes (Corrected paths)
-const sessionRoutes = require('./routes/sessions');
+// ✅ Ensure these paths are correct
+const sessionRoutes = require('./routes/sessions'); 
 const authRoutes = require('./routes/auth');
 
 const app = express();
