@@ -1,42 +1,24 @@
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
-const connectDB = require("./config/db");
-const authRoutes = require("./routes/auth");
-const sessionRoutes = require("./routes/sessions");
-
-dotenv.config();
-connectDB();
+const mongoose = require("mongoose");
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-// ✅ Log All Registered Routes
-const listRoutes = require("express-list-endpoints"); // Install: npm install express-list-endpoints
-app.use((req, res, next) => {
-    console.log(`[${req.method}] ${req.path}`);
-    next();
-});
+// ✅ Replace `process.env.MONGODB_URI` with the actual connection string
+const MONGODB_URI = "mongodb+srv://Fitboxing_admin:Powerboxing123@cluster0.mongodb.net/powerboxing?retryWrites=true&w=majority";
 
-// ✅ Register API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/sessions", sessionRoutes);
+// ✅ MongoDB Connection
+mongoose
+  .connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB Connected Successfully"))
+  .catch((err) => console.error("❌ MongoDB Connection Failed:", err));
 
-// ✅ Route to List All Available API Endpoints
-app.get("/api/debug", (req, res) => {
-    res.json({
-        message: "API is working",
-        routes: listRoutes(app),
-    });
-});
-
-// ✅ Health Check
 app.get("/", (req, res) => res.send("Powerboxing API is running..."));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log("✅ Registered Routes:", listRoutes(app));
-});
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
