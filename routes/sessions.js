@@ -1,37 +1,25 @@
-const express = require('express');
+const express = require("express");
+const path = require("path");
 const router = express.Router();
-const Session = require('../models/Session');
-const authMiddleware = require('../middleware/authMiddleware'); // ✅ Correct path
+const authMiddleware = require(path.join(__dirname, "../middlewares/auth"));
+const Session = require(path.join(__dirname, "../models/session")); // FIXED PATH
 
-// ✅ Start a session
-router.post('/start', authMiddleware, async (req, res) => {
-    try {
-        const { session_id } = req.body;
-        if (!session_id) {
-            return res.status(400).json({ message: "Session ID is required" });
-        }
+// Start Session Route
+router.post("/start", authMiddleware, async (req, res) => {
+  try {
+    const { session_id } = req.body;
+    const session = await Session.findOneAndUpdate(
+      { session_id },
+      { $set: { status: "active" } },
+      { new: true }
+    );
 
-        const session = await Session.findOne({ session_id });
-        if (!session) {
-            return res.status(404).json({ message: "Session not found" });
-        }
+    if (!session) return res.status(404).json({ message: "Session not found" });
 
-        session.status = "active";
-        await session.save();
-        res.json({ message: "Session started successfully", session });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error });
-    }
-});
-
-// ✅ Get all sessions
-router.get('/', authMiddleware, async (req, res) => {
-    try {
-        const sessions = await Session.find();
-        res.json(sessions);
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error });
-    }
+    res.json({ message: "Session started", session });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error" });
+  }
 });
 
 module.exports = router;
