@@ -3,7 +3,7 @@ const path = require("path");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require(path.join(__dirname, "../models/user")); // FIXED PATH
+const User = require(path.join(__dirname, "../models/user")); // ✅ Forced correct path
 
 // Login Route
 router.post("/login", async (req, res) => {
