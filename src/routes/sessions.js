@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const router = express.Router();
 const authMiddleware = require(path.join(__dirname, "../middlewares/auth"));
-const Session = require(path.join(__dirname, "../models/session")); // ✅ Fixed path
+const Session = require(path.join(__dirname, "../models/session")); // 🔥 FIXED PATH
 
 // Start Session Route
 router.post("/start", authMiddleware, async (req, res) => {
