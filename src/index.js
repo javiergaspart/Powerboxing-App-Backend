@@ -2,12 +2,18 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
+const fs = require("fs");
 
 dotenv.config();
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// ✅ Check if `routes/` folder exists
+if (!fs.existsSync("./routes/auth.js") || !fs.existsSync("./routes/sessions.js")) {
+    console.error("❌ ERROR: Routes folder is missing!");
+}
 
 // ✅ Import Routes
 const authRoutes = require("./routes/auth");
