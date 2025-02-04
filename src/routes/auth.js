@@ -1,55 +1,53 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
-const User = require("../models/user");
+const User = require("../models/user"); // Ensure this path is correct
 
-dotenv.config();
 const router = express.Router();
 
-// ✅ Debug Log to Confirm Route is Loaded
-console.log("✅ Auth route file is being executed");
-
-// @route   POST /api/auth/login
-// @desc    Authenticate user & get token
-// @access  Public
-router.post("/login", async (req, res) => {
-    console.log("🔹 Login route hit");
-
-    const { email, password } = req.body;
+// ✅ SIGNUP Route
+router.post("/signup", async (req, res) => {
     try {
-        if (!email || !password) {
-            console.log("❌ Missing email or password");
-            return res.status(400).json({ message: "Email and password are required" });
-        }
+        const { name, email, password, role } = req.body;
 
+        // Check if user already exists
         let user = await User.findOne({ email });
-        if (!user) {
-            console.log(`❌ User not found: ${email}`);
-            return res.status(400).json({ message: "Invalid credentials" });
-        }
+        if (user) return res.status(400).json({ message: "User already exists" });
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            console.log("❌ Incorrect password");
-            return res.status(400).json({ message: "Invalid credentials" });
-        }
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-        const payload = { user: { id: user.id, role: user.role } };
+        // Create new user
+        user = new User({ name, email, password: hashedPassword, role });
+        await user.save();
 
-        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" }, (err, token) => {
-            if (err) throw err;
-            console.log("✅ Token generated");
-            res.json({ token });
-        });
-
-    } catch (error) {
-        console.error("🚨 Server error:", error.message);
-        res.status(500).send("Server error");
+        // Return success message
+        res.status(201).json({ message: "User registered successfully" });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send("Server Error");
     }
 });
 
-// ✅ Debug Log to Show All Registered Routes in This File
-console.log("✅ Auth Route List:", router.stack.map((r) => r.route?.path));
+// ✅ LOGIN Route
+router.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        let user = await User.findOne({ email });
+        if (!user) return res.status(400).json({ message: "Invalid Credentials" });
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ message: "Invalid Credentials" });
+
+        const payload = { user: { id: user.id, role: user.role } };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+        res.json({ token });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send("Server Error");
+    }
+});
 
 module.exports = router;
