@@ -28,7 +28,7 @@ console.log("✅ /api/sessions routes registered");
 
 // ✅ Debug Route - Show Full Express Route Tree
 app.get("/api/debug", (req, res) => {
-    const routes = listEndpoints(app);  // 🔥 LOG FULL EXPRESS ROUTE TREE
+    const routes = listEndpoints(app);  // 🔥 fuckLOG FULL EXPRESS ROUTE TREE
     console.log("✅ FULL EXPRESS ROUTE TREE:", routes);
     res.json({ message: "API is running", routes });
 });
