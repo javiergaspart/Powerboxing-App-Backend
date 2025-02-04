@@ -13,7 +13,7 @@ app.use(express.json());
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/sessions", require("./routes/sessions"));
 
-// ✅ DEBUG Route to check API routes
+// ✅ DEBUG Route to check all registered API routes
 app.get("/api/debug", (req, res) => {
     res.json({
         message: "API is running",

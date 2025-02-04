@@ -1,14 +1,14 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const User = require("../models/user"); // Ensure this path is correct
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
 
 const router = express.Router();
 
-// ✅ SIGNUP Route (with full debugging)
+// ✅ SIGNUP Route
 router.post("/signup", async (req, res) => {
     try {
-        console.log("🔹 Signup request received:", req.body); // Log incoming request
-
+        console.log("🔹 Signup request received:", req.body);
         const { name, email, password, role } = req.body;
 
         // Check for missing fields
@@ -36,6 +36,39 @@ router.post("/signup", async (req, res) => {
         res.status(201).json({ message: "User registered successfully" });
     } catch (err) {
         console.error("🚨 Signup Error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+
+// ✅ LOGIN Route
+router.post("/login", async (req, res) => {
+    try {
+        console.log("🔹 Login request received:", req.body);
+        const { email, password } = req.body;
+
+        // Check if email exists
+        let user = await User.findOne({ email });
+        if (!user) {
+            console.error("❌ Invalid email:", email);
+            return res.status(400).json({ message: "Invalid Credentials" });
+        }
+
+        // Validate password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            console.error("❌ Incorrect password for:", email);
+            return res.status(400).json({ message: "Invalid Credentials" });
+        }
+
+        // Generate JWT Token
+        const payload = { user: { id: user.id, role: user.role } };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+        console.log("✅ Login successful:", email);
+        res.json({ token });
+
+    } catch (err) {
+        console.error("🚨 Login Error:", err);
         res.status(500).json({ message: "Server error", error: err.message });
     }
 });
