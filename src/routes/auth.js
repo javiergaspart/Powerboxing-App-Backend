@@ -7,8 +7,8 @@ const User = require("../models/user");
 dotenv.config();
 const router = express.Router();
 
-// ✅ DEBUG: Ensure file is loaded
-console.log("✅ Auth route loaded");
+// ✅ Debug Log to Confirm Route is Loaded
+console.log("✅ Auth route file is being executed");
 
 // @route   POST /api/auth/login
 // @desc    Authenticate user & get token
@@ -18,27 +18,23 @@ router.post("/login", async (req, res) => {
 
     const { email, password } = req.body;
     try {
-        // ✅ Ensure email and password are provided
         if (!email || !password) {
             console.log("❌ Missing email or password");
             return res.status(400).json({ message: "Email and password are required" });
         }
 
-        // ✅ Find user in MongoDB
         let user = await User.findOne({ email });
         if (!user) {
             console.log(`❌ User not found: ${email}`);
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
-        // ✅ Check if password matches
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             console.log("❌ Incorrect password");
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
-        // ✅ Generate JWT Token
         const payload = { user: { id: user.id, role: user.role } };
 
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" }, (err, token) => {
@@ -55,9 +51,8 @@ router.post("/login", async (req, res) => {
 
 // ✅ Test Route to Ensure `/api/auth` is Working
 router.get("/test", (req, res) => {
-    console.log("✅ Auth route test successful");
+    console.log("✅ Auth test route hit");
     res.json({ message: "Auth route is active" });
 });
 
-// ✅ Export Correctly
 module.exports = router;
