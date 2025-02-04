@@ -13,13 +13,13 @@ app.use(express.json());
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/sessions", require("./routes/sessions"));
 
-// ✅ DEBUG Route to check all registered API routes
+// ✅ DEBUG Route to check API routes
 app.get("/api/debug", (req, res) => {
     res.json({
         message: "API is running",
         routes: [
             { path: "/api/auth/login", methods: ["POST"] },
-            { path: "/api/auth/signup", methods: ["POST"] }, // ✅ Now Included
+            { path: "/api/auth/signup", methods: ["POST"] },
             { path: "/api/sessions/start", methods: ["POST"] }
         ]
     });
@@ -28,10 +28,17 @@ app.get("/api/debug", (req, res) => {
 // ✅ Root Route
 app.get("/", (req, res) => res.send("Powerboxing API is running..."));
 
+// ✅ Ensure `MONGO_URI` is Defined
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+    console.error("❌ ERROR: Missing MONGO_URI. Please set it in the environment variables.");
+    process.exit(1);
+}
+
 // ✅ Connect to MongoDB
 const startServer = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI, {
+        await mongoose.connect(MONGO_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true
         });
