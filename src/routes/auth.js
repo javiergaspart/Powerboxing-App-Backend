@@ -5,19 +5,10 @@ const dotenv = require("dotenv");
 const User = require("../models/user");
 
 dotenv.config();
-
 const router = express.Router();
 
-// ✅ DEBUG LOGGING
+// ✅ DEBUG: Ensure file is loaded
 console.log("✅ Auth route loaded");
-
-// @route   GET /api/auth/test
-// @desc    Test auth route
-// @access  Public
-router.get("/test", (req, res) => {
-    console.log("✅ Auth route test successful");
-    res.json({ message: "Auth route is active" });
-});
 
 // @route   POST /api/auth/login
 // @desc    Authenticate user & get token
@@ -27,19 +18,29 @@ router.post("/login", async (req, res) => {
 
     const { email, password } = req.body;
     try {
+        // ✅ Ensure email and password are provided
+        if (!email || !password) {
+            console.log("❌ Missing email or password");
+            return res.status(400).json({ message: "Email and password are required" });
+        }
+
+        // ✅ Find user in MongoDB
         let user = await User.findOne({ email });
         if (!user) {
-            console.log("❌ Invalid email");
+            console.log(`❌ User not found: ${email}`);
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
+        // ✅ Check if password matches
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            console.log("❌ Invalid password");
+            console.log("❌ Incorrect password");
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
+        // ✅ Generate JWT Token
         const payload = { user: { id: user.id, role: user.role } };
+
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" }, (err, token) => {
             if (err) throw err;
             console.log("✅ Token generated");
@@ -50,6 +51,12 @@ router.post("/login", async (req, res) => {
         console.error("🚨 Server error:", error.message);
         res.status(500).send("Server error");
     }
+});
+
+// ✅ Test Route to Ensure `/api/auth` is Working
+router.get("/test", (req, res) => {
+    console.log("✅ Auth route test successful");
+    res.json({ message: "Auth route is active" });
 });
 
 // ✅ Export Correctly
