@@ -9,15 +9,29 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Import Routes
-const authRoutes = require("./routes/auth");
-const sessionRoutes = require("./routes/sessions");
+// ✅ DEBUG: Log When App Starts
+console.log("🚀 Starting Express Server...");
 
-// ✅ Register Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/sessions", sessionRoutes);
+// ✅ Try to Import Routes and Catch Errors
+try {
+    console.log("📂 Importing auth routes...");
+    const authRoutes = require("./routes/auth");
+    app.use("/api/auth", authRoutes);
+    console.log("✅ /api/auth routes registered");
+} catch (error) {
+    console.error("❌ ERROR: Could not load auth routes", error.message);
+}
 
-// ✅ Debug Route - Show All Available API Routes
+try {
+    console.log("📂 Importing session routes...");
+    const sessionRoutes = require("./routes/sessions");
+    app.use("/api/sessions", sessionRoutes);
+    console.log("✅ /api/sessions routes registered");
+} catch (error) {
+    console.error("❌ ERROR: Could not load session routes", error.message);
+}
+
+// ✅ Final Debugging - List All Registered Routes
 app.get("/api/debug", (req, res) => {
     const availableRoutes = app._router.stack
         .filter((r) => r.route)
@@ -31,7 +45,7 @@ app.get("/api/debug", (req, res) => {
     });
 });
 
-// ✅ Health Check
+// ✅ Health Check Route
 app.get("/", (req, res) => res.send("Powerboxing API is running..."));
 
 // ✅ MongoDB Connection
