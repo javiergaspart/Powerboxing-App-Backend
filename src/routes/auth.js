@@ -49,10 +49,7 @@ router.post("/login", async (req, res) => {
     }
 });
 
-// ✅ Test Route to Ensure `/api/auth` is Working
-router.get("/test", (req, res) => {
-    console.log("✅ Auth test route hit");
-    res.json({ message: "Auth route is active" });
-});
+// ✅ Debug Log to Show All Registered Routes in This File
+console.log("✅ Auth Route List:", router.stack.map((r) => r.route?.path));
 
 module.exports = router;
