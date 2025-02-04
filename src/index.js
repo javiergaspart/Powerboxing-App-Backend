@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
+const listEndpoints = require("express-list-endpoints"); // 🔥 LOG FULL ROUTES
 
 dotenv.config();
 const app = express();
@@ -25,18 +26,11 @@ console.log("✅ Sessions route loaded");
 app.use("/api/sessions", sessionRoutes);
 console.log("✅ /api/sessions routes registered");
 
-// ✅ Debug Route - Show All Available API Routes
+// ✅ Debug Route - Show Full Express Route Tree
 app.get("/api/debug", (req, res) => {
-    const availableRoutes = app._router.stack
-        .filter((r) => r.route)
-        .map((r) => r.route.path);
-
-    console.log("✅ FULL REGISTERED ROUTES IN EXPRESS:", availableRoutes);
-
-    res.json({
-        message: "API is running",
-        routes: availableRoutes,
-    });
+    const routes = listEndpoints(app);  // 🔥 LOG FULL EXPRESS ROUTE TREE
+    console.log("✅ FULL EXPRESS ROUTE TREE:", routes);
+    res.json({ message: "API is running", routes });
 });
 
 // ✅ Health Check Route
@@ -54,7 +48,4 @@ mongoose
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log("✅ FINAL EXPRESS ROUTES:", app._router.stack
-        .filter((r) => r.route)
-        .map((r) => r.route.path));
 });
