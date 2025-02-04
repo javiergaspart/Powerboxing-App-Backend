@@ -17,15 +17,18 @@ const sessionRoutes = require("./routes/sessions");
 app.use("/api/auth", authRoutes);
 app.use("/api/sessions", sessionRoutes);
 
-// ✅ Debug Route - Show All Available API Routes
-app.get("/api/debug", (req, res) => {
-    const availableRoutes = app._router.stack
+// ✅ Log Available Routes Correctly
+const listRoutes = (app) => {
+    return app._router.stack
         .filter((r) => r.route)
         .map((r) => r.route.path);
+};
 
+// ✅ Debug Route - Show All Available API Routes
+app.get("/api/debug", (req, res) => {
     res.json({
         message: "API is running",
-        routes: availableRoutes,
+        routes: listRoutes(app),
     });
 });
 
@@ -44,5 +47,5 @@ mongoose
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log("✅ Available Routes:", availableRoutes);
+    console.log("✅ Available Routes:", listRoutes(app)); // ✅ Fix: Properly call listRoutes function
 });
