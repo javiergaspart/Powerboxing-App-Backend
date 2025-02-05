@@ -1,37 +1,119 @@
+const express = require("express");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const router = express.Router();
+const User = require("../models/user");
+const authMiddleware = require("../middlewares/auth");
 
-const authMiddleware = (req, res, next) => {
+// ✅ User Signup Route
+router.post("/signup", async (req, res) => {
     try {
-        const authHeader = req.header("Authorization");
+        const { name, email, password, role } = req.body;
 
-        if (!authHeader) {
-            console.error("❌ No Authorization header received");
-            return res.status(401).json({ message: "Access denied. No token provided." });
+        console.log("🔹 Signup Request Received:", req.body);
+
+        // Check if user already exists
+        let user = await User.findOne({ email });
+        if (user) {
+            console.error("❌ User already exists:", email);
+            return res.status(400).json({ message: "User already exists" });
         }
 
-        // Expecting 'Bearer <token>', extract token from the header
-        const token = authHeader.split(" ")[1]; 
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-        console.log("🔹 Received Token:", token);
+        // ✅ Create user with session_balance = 1 for trial users
+        user = new User({
+            name,
+            email,
+            password: hashedPassword,
+            role,
+            session_balance: 1,  // ✅ New users start with 1 free session
+            trial: true           // ✅ Mark them as trial users
+        });
 
-        if (!token) {
-            console.error("❌ Token is missing from Authorization header");
-            return res.status(401).json({ message: "Access denied. Token missing." });
-        }
+        await user.save();
+        console.log("✅ User registered successfully:", email);
+        res.status(201).json({ message: "User registered successfully" });
 
-        // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        console.log("✅ Token Decoded Successfully:", decoded);
-
-        // Attach user data to request
-        req.user = decoded.user;
-
-        next();
     } catch (err) {
-        console.error("🚨 Token Verification Failed:", err.message);
-        res.status(400).json({ message: "Invalid token." });
+        console.error("🚨 Signup Error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
     }
-};
+});
 
-module.exports = authMiddleware;
+// ✅ User Login Route (Returns session_balance)
+router.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        console.log("🔹 Login Request Received:", email);
+
+        let user = await User.findOne({ email });
+        if (!user) {
+            console.error("❌ Invalid email:", email);
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            console.error("❌ Invalid password for:", email);
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+
+        const payload = {
+            user: {
+                id: user.id,
+                role: user.role
+            }
+        };
+
+        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" }, (err, token) => {
+            if (err) throw err;
+
+            console.log("✅ User Logged In:", user.email, "| Sessions:", user.session_balance);
+            
+            res.json({
+                token,
+                user: {
+                    name: user.name,
+                    email: user.email,
+                    session_balance: user.session_balance,  // ✅ Ensure this is included
+                    trial: user.trial  // ✅ Include trial status
+                }
+            });
+        });
+
+    } catch (err) {
+        console.error("🚨 Login Error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// ✅ Get User Profile (Requires Authentication)
+router.get("/user", authMiddleware, async (req, res) => {
+    try {
+        console.log("🔹 Fetching user details...");
+
+        const user = await User.findById(req.user.id).select("-password");
+        if (!user) {
+            console.error("❌ User not found:", req.user.id);
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        console.log("✅ User details retrieved:", user.email, "| Sessions:", user.session_balance);
+        
+        res.json({
+            name: user.name,
+            email: user.email,
+            session_balance: user.session_balance,
+            trial: user.trial
+        });
+
+    } catch (err) {
+        console.error("🚨 Error fetching user:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+
+module.exports = router;
