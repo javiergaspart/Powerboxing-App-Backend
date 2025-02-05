@@ -1,36 +1,20 @@
 const express = require("express");
-const path = require("path");
-const authMiddleware = require(path.join(__dirname, "../middlewares/auth"));
-const Session = require(path.join(__dirname, "../models/session"));
+const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-// ✅ DEBUG LOGGING
-console.log("✅ Sessions route loaded");
-
-// @route   GET /api/sessions/test
-// @desc    Test sessions route
-// @access  Public
-router.get("/test", (req, res) => {
-    console.log("✅ Sessions route test successful");
-    res.json({ message: "Sessions route is active" });
-});
-
-// @route   POST /api/sessions/start
-// @desc    Start a new session
-// @access  Private
+// ✅ SESSION START Route (Protected)
 router.post("/start", authMiddleware, async (req, res) => {
-    console.log("🔹 Start session route hit");
-
     try {
-        const newSession = new Session(req.body);
-        await newSession.save();
-        res.json(newSession);
-    } catch (error) {
-        console.error("🚨 Server error:", error.message);
-        res.status(500).send("Server error");
+        console.log("🔹 Start session request received by:", req.user.id);
+
+        // Placeholder logic - replace with session handling logic
+        res.status(200).json({ message: "Session started successfully" });
+
+    } catch (err) {
+        console.error("🚨 Session Start Error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
     }
 });
 
-// ✅ Export Correctly
 module.exports = router;
