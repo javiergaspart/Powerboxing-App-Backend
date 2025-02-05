@@ -6,9 +6,9 @@ require("dotenv").config();
 const app = express();
 
 // ✅ Import routes and middleware
-const authRoutes = require("./routes/auth");
+const authRoutes = require("./routes/auth"); // ✅ Ensure this is a function
 const sessionRoutes = require("./routes/sessions");
-const authMiddleware = require("./middlewares/authMiddleware"); // Ensure correct filename
+const authMiddleware = require("./middlewares/authMiddleware");
 
 app.use(express.json());
 app.use(cors());
@@ -18,9 +18,9 @@ console.log("🔹 authRoutes Type:", typeof authRoutes);
 console.log("🔹 sessionRoutes Type:", typeof sessionRoutes);
 console.log("🔹 authMiddleware Type:", typeof authMiddleware);
 
-// ✅ Ensure `authMiddleware` is a function before using it
-if (typeof authMiddleware !== "function") {
-    throw new Error("authMiddleware is not a function! Check middlewares/authMiddleware.js");
+// ✅ Ensure `authRoutes` is a function before using it
+if (typeof authRoutes !== "function") {
+    throw new Error("authRoutes is not a function! Check routes/auth.js");
 }
 
 // ✅ Use routes
@@ -29,14 +29,13 @@ app.use("/api/sessions", sessionRoutes);
 
 app.get("/", (req, res) => res.send("Powerboxing API is running..."));
 
-// ✅ MongoDB Connection
+// ✅ Connect to MongoDB and Start Server
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
     console.error("❌ ERROR: Missing MONGO_URI. Please set it in the environment variables.");
     process.exit(1);
 }
 
-// ✅ Connect to MongoDB and Start Server
 const startServer = async () => {
     try {
         await mongoose.connect(MONGO_URI, {
