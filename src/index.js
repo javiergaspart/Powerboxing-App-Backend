@@ -8,7 +8,7 @@ const app = express();
 // ✅ Import routes and middleware
 const authRoutes = require("./routes/auth");
 const sessionRoutes = require("./routes/sessions");
-const authMiddleware = require("./middlewares/authMiddleware"); // ✅ Ensure this is correct
+const authMiddleware = require("./middlewares/authMiddleware"); // Ensure correct filename
 
 app.use(express.json());
 app.use(cors());
@@ -27,22 +27,9 @@ if (typeof authMiddleware !== "function") {
 app.use("/api/auth", authRoutes);
 app.use("/api/sessions", sessionRoutes);
 
-// ✅ Debugging Route to check all API endpoints
-app.get("/api/debug", (req, res) => {
-    res.json({
-        message: "API is running",
-        routes: [
-            { path: "/api/auth/login", methods: ["POST"] },
-            { path: "/api/auth/signup", methods: ["POST"] },
-            { path: "/api/sessions/start", methods: ["POST"] }
-        ]
-    });
-});
-
-// ✅ Default Route
 app.get("/", (req, res) => res.send("Powerboxing API is running..."));
 
-// ✅ Ensure `MONGO_URI` is Defined
+// ✅ MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
     console.error("❌ ERROR: Missing MONGO_URI. Please set it in the environment variables.");
