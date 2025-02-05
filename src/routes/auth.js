@@ -5,7 +5,7 @@ const User = require("../models/user");
 
 const router = express.Router();
 
-// ✅ SIGNUP Route
+// ✅ SIGNUP Route (Now Includes Free Trial)
 router.post("/signup", async (req, res) => {
     try {
         console.log("🔹 Signup request received:", req.body);
@@ -13,7 +13,6 @@ router.post("/signup", async (req, res) => {
 
         // Check for missing fields
         if (!name || !email || !password || !role) {
-            console.error("❌ Missing fields:", req.body);
             return res.status(400).json({ message: "All fields are required" });
         }
 
@@ -25,50 +24,25 @@ router.post("/signup", async (req, res) => {
         }
 
         console.log("🔹 Hashing password...");
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        console.log("🔹 Creating new user...");
-        user = new User({ name, email, password: hashedPassword, role });
+        console.log("🔹 Creating new user with free trial...");
+        user = new User({
+            name,
+            email,
+            password: hashedPassword,
+            role,
+            session_balance: 1, // ✅ Free Trial Session
+            trial: true // ✅ Mark as a Trial User
+        });
+
         await user.save();
 
         console.log("✅ User registered successfully:", email);
         res.status(201).json({ message: "User registered successfully" });
+
     } catch (err) {
         console.error("🚨 Signup Error:", err);
-        res.status(500).json({ message: "Server error", error: err.message });
-    }
-});
-
-// ✅ LOGIN Route
-router.post("/login", async (req, res) => {
-    try {
-        console.log("🔹 Login request received:", req.body);
-        const { email, password } = req.body;
-
-        // Check if email exists
-        let user = await User.findOne({ email });
-        if (!user) {
-            console.error("❌ Invalid email:", email);
-            return res.status(400).json({ message: "Invalid Credentials" });
-        }
-
-        // Validate password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            console.error("❌ Incorrect password for:", email);
-            return res.status(400).json({ message: "Invalid Credentials" });
-        }
-
-        // Generate JWT Token
-        const payload = { user: { id: user.id, role: user.role } };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-        console.log("✅ Login successful:", email);
-        res.json({ token });
-
-    } catch (err) {
-        console.error("🚨 Login Error:", err);
         res.status(500).json({ message: "Server error", error: err.message });
     }
 });
