@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
 const User = require("../models/user");
-const authMiddleware = require("../middlewares/auth");
+const authMiddleware = require("../middlewares/auth"); // Ensure this is correctly required
 
 // ✅ User Signup Route
 router.post("/signup", async (req, res) => {

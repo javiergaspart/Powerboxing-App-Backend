@@ -27,4 +27,5 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
+// ✅ Ensure it's correctly exported
 module.exports = authMiddleware;
