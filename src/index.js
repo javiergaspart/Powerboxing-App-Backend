@@ -5,15 +5,29 @@ require("dotenv").config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// ✅ Import routes and middleware
+const authRoutes = require("./routes/auth");
+const sessionRoutes = require("./routes/sessions");
+const authMiddleware = require("./middlewares/authMiddleware"); // ✅ Ensure correct filename
+
 app.use(express.json());
+app.use(cors());
 
-// ✅ Register Routes
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/sessions", require("./routes/sessions"));
+// ✅ Debugging: Print Middleware Types
+console.log("🔹 authRoutes Type:", typeof authRoutes);
+console.log("🔹 sessionRoutes Type:", typeof sessionRoutes);
+console.log("🔹 authMiddleware Type:", typeof authMiddleware);
 
-// ✅ DEBUG Route to check all registered API routes
+// ✅ Ensure `authMiddleware` is a function before using it
+if (typeof authMiddleware !== "function") {
+    throw new Error("authMiddleware is not a function! Check middlewares/authMiddleware.js");
+}
+
+// ✅ Use routes
+app.use("/api/auth", authRoutes);
+app.use("/api/sessions", sessionRoutes);
+
+// ✅ Debugging Route to check all API endpoints
 app.get("/api/debug", (req, res) => {
     res.json({
         message: "API is running",
@@ -25,7 +39,7 @@ app.get("/api/debug", (req, res) => {
     });
 });
 
-// ✅ Root Route
+// ✅ Default Route
 app.get("/", (req, res) => res.send("Powerboxing API is running..."));
 
 // ✅ Ensure `MONGO_URI` is Defined
@@ -35,7 +49,7 @@ if (!MONGO_URI) {
     process.exit(1);
 }
 
-// ✅ Connect to MongoDB
+// ✅ Connect to MongoDB and Start Server
 const startServer = async () => {
     try {
         await mongoose.connect(MONGO_URI, {
