@@ -1,31 +1,19 @@
 const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
-    const authHeader = req.header("Authorization");
-
-    if (!authHeader) {
-        console.error("❌ No Authorization header received");
-        return res.status(401).json({ message: "Access denied. No token provided." });
-    }
-
-    const token = authHeader.split(" ")[1]; // Extract token
-    console.log("🔹 Received Token:", token);
+    const token = req.header("x-auth-token");
 
     if (!token) {
-        console.error("❌ Token is missing from Authorization header");
-        return res.status(401).json({ message: "Access denied. Token missing." });
+        return res.status(401).json({ message: "Access denied. No token provided." });
     }
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log("✅ Token Decoded Successfully:", decoded);
-        req.user = decoded.user;
+        req.user = decoded;
         next();
-    } catch (err) {
-        console.error("🚨 Token Verification Failed:", err.message);
+    } catch (error) {
         res.status(400).json({ message: "Invalid token." });
     }
 };
 
-// ✅ Ensure it's correctly exported
 module.exports = authMiddleware;
