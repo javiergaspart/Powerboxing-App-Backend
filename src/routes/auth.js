@@ -10,35 +10,27 @@ router.post("/signup", async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
 
-        // Check for missing fields
-        if (!name || !email || !password || !role) {
-            console.error("❌ Missing fields:", req.body);
-            return res.status(400).json({ message: "All fields are required" });
-        }
-
-        console.log("🔹 Checking if user already exists...");
+        // Check if user already exists
         let user = await User.findOne({ email });
         if (user) {
-            console.error("❌ User already exists:", email);
             return res.status(400).json({ message: "User already exists" });
         }
 
-        console.log("🔹 Hashing password...");
+        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        console.log("🔹 Creating new user...");
+        // ✅ Create user with session_balance = 1 for trial users
         user = new User({
             name,
             email,
             password: hashedPassword,
             role,
-            session_balance: 1, // ✅ New users get 1 free session
-            trial: true, // ✅ Mark them as a trial user
+            session_balance: 1,  // ✅ New users start with 1 free session
+            trial: true           // ✅ Mark them as trial users
         });
 
         await user.save();
-        console.log("✅ User registered successfully:", email);
         res.status(201).json({ message: "User registered successfully" });
 
     } catch (err) {
@@ -47,50 +39,48 @@ router.post("/signup", async (req, res) => {
     }
 });
 
-// ✅ User Login Route
+// ✅ User Login Route (Returns session_balance)
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Check for missing fields
-        if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required" });
-        }
-
-        console.log("🔹 Checking if user exists...");
         let user = await User.findOne({ email });
         if (!user) {
-            console.error("❌ Invalid credentials:", email);
-            return res.status(400).json({ message: "Invalid credentials" });
+            return res.status(400).json({ message: "Invalid email or password" });
         }
 
-        console.log("🔹 Comparing passwords...");
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            console.error("❌ Invalid password:", email);
-            return res.status(400).json({ message: "Invalid credentials" });
+            return res.status(400).json({ message: "Invalid email or password" });
         }
 
-        console.log("🔹 Generating JWT token...");
         const payload = {
             user: {
                 id: user.id,
-                role: user.role,
-            },
+                role: user.role
+            }
         };
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-        console.log("✅ Login successful:", email);
-        res.json({ token });
+        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" }, (err, token) => {
+            if (err) throw err;
+            res.json({
+                token,
+                user: {
+                    name: user.name,
+                    email: user.email,
+                    session_balance: user.session_balance,  // ✅ Ensure session balance is included
+                    trial: user.trial  // ✅ Include trial status
+                }
+            });
+        });
 
     } catch (err) {
         console.error("🚨 Login Error:", err);
-        res.status(500).json({ message: "Server error", error: err.message });
+        res.status(500).json({ message: "Server error" });
     }
 });
 
-// ✅ Get User Details (Requires Authentication)
+// ✅ Get User Profile (Requires Authentication)
 router.get("/user", authMiddleware, async (req, res) => {
     try {
         console.log("🔹 Fetching user details...");
@@ -104,7 +94,7 @@ router.get("/user", authMiddleware, async (req, res) => {
             name: user.name,
             email: user.email,
             session_balance: user.session_balance,
-            trial: user.trial,
+            trial: user.trial
         });
 
     } catch (err) {
