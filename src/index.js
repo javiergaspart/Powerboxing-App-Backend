@@ -8,7 +8,7 @@ const app = express();
 // ✅ Import routes and middleware
 const authRoutes = require("./routes/auth");
 const sessionRoutes = require("./routes/sessions");
-const authMiddleware = require("./middlewares/authMiddleware"); // ✅ Ensure correct filename
+const authMiddleware = require("./middlewares/authMiddleware"); // ✅ Ensure this is correct
 
 app.use(express.json());
 app.use(cors());
