@@ -36,7 +36,7 @@ router.post("/signup", async (req, res) => {
     }
 });
 
-// ✅ User Login Route (Returns session_balance)
+// ✅ User Login Route
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -74,6 +74,32 @@ router.post("/login", async (req, res) => {
     } catch (err) {
         console.error("🚨 Login Error:", err);
         res.status(500).json({ message: "Server error" });
+    }
+});
+
+// ✅ GET User Profile (Protected Route)
+router.get("/user", authMiddleware, async (req, res) => {
+    try {
+        console.log("🔹 Fetching user details...");
+
+        const user = await User.findById(req.user.id).select("-password");
+        if (!user) {
+            console.error("❌ User not found:", req.user.id);
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        console.log("✅ User details retrieved:", user.email, "| Sessions:", user.session_balance);
+        
+        res.json({
+            name: user.name,
+            email: user.email,
+            session_balance: user.session_balance,
+            trial: user.trial
+        });
+
+    } catch (err) {
+        console.error("🚨 Error fetching user:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
     }
 });
 
