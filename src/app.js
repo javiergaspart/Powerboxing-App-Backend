@@ -1,56 +1,31 @@
-// src/app.js
-
 const express = require('express');
-const mongoose = require('mongoose');
+const cors = require('cors');
 const dotenv = require('dotenv');
-const authRoutes = require('./routes/authRoutes');
-const punchingBagRoutes = require('./routes/punchingBagRoutes');
-const resultRoutes = require('./routes/resultsRoutes');
-const sensorRoutes = require('./routes/sensorRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
-const userRoutes = require('./routes/userRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
+const trainerRoutes = require('./routes/trainerRoutes'); // ✅ Trainer API
+const userRoutes = require('./routes/userRoutes'); // ✅ User API
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
-
-// Middleware to parse JSON requests
 app.use(express.json());
+app.use(cors());
 
-const bodyParser = require('body-parser');
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }))
+// ✅ Register Trainer Routes
+console.log("✅ Registering trainerRoutes.js...");
+app.use('/fitboxing/trainers', trainerRoutes); // ✅ Correct Path
 
+// ✅ Register User Routes
+console.log("✅ Registering userRoutes.js...");
+app.use('/fitboxing/auth', userRoutes); // ✅ Correct Path
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  console.log("\x1b[32m"+ `Successfully connected to mongoDB at Port: ${process.env.PORT}`+ "\x1b[0m");
-})
-.catch((error) => {
-  console.error('MongoDB connection error:', error);
+// ✅ Register Session Routes
+console.log("✅ Registering sessionRoutes.js...");
+app.use('/fitboxing/sessions', sessionRoutes);
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
 });
 
-// Route definitions
-app.use('/fitboxing/auth', authRoutes);                    // Handles authentication routes
-app.use('/fitboxing/punching-bags', punchingBagRoutes);    // Handles punching bag routes
-app.use('/fitboxing/results', resultRoutes);               // Handles results routes
-app.use('/fitboxing/sensors', sensorRoutes);               // Handles sensor routes
-app.use('/fitboxing/sessions', sessionRoutes);             // Handles session routes
-app.use('/fitboxing/users', userRoutes);                   // Handles user-related routes
-app.use('/fitboxing/payments', paymentRoutes);             // Handles payment-related routes
-
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
-
-// Export the app for testing or further configuration
 module.exports = app;

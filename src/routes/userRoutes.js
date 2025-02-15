@@ -1,11 +1,8 @@
-// src/routes/userRoutes.js
-
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 
-router.get('/:id', userController.getUserById);
-router.put('/:id/last-login', userController.updateUserLastLogin);
-router.get('/', userController.getAllUsers);
+router.post('/login', userController.loginUser);
+router.post('/register', userController.signupUser);
 
 module.exports = router;

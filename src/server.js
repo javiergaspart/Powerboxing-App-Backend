@@ -1,23 +1,22 @@
-require('dotenv').config(); // Load environment variables at the top
-const express = require('express');
-const connectDB = require('./config/db');
-const cors = require('cors');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const app = require('./app');
 
-const app = express();
+dotenv.config();
 
-// Middleware
-app.use(express.json());
-app.use(cors());
+// Debug log to confirm .env is being read
+console.log("✅ Environment variables loaded.");
 
-// Connect to MongoDB
-connectDB();
+// Ensure MongoDB URI exists
+const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+if (!mongoUri) {
+  console.error("❌ MONGODB_URI is not defined in .env file!");
+  process.exit(1);
+}
 
-// Default Route
-app.get('/', (req, res) => {
-    res.send('Powerboxing API is running...');
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-});
+mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("✅ MongoDB Connected Successfully"))
+  .catch(error => {
+    console.error("❌ MongoDB Connection Failed:", error);
+    process.exit(1);
+  });

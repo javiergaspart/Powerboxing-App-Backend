@@ -1,107 +1,123 @@
 const express = require("express");
-const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user");
-const authMiddleware = require("../middlewares/authMiddleware"); // ✅ Ensure correct import
+const router = express.Router();
+const User = require("../models/userModel");
+const Trainer = require("../models/trainerModel");
+require("dotenv").config();
 
-// ✅ User Signup Route
-router.post("/signup", async (req, res) => {
-    try {
-        const { name, email, password, role } = req.body;
+// Middleware for verifying JWT
+const authMiddleware = require("../middleware/authMiddleware");
 
-        let user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ message: "User already exists" });
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        user = new User({
-            name,
-            email,
-            password: hashedPassword,
-            role,
-            session_balance: 1,  // ✅ New users start with 1 free session
-            trial: true
-        });
-
-        await user.save();
-        res.status(201).json({ message: "User registered successfully" });
-
-    } catch (err) {
-        console.error("🚨 Signup Error:", err);
-        res.status(500).json({ message: "Server error", error: err.message });
-    }
-});
-
-// ✅ User Login Route
+// User and Trainer Login
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required" });
+        }
+
+        // Check both Users and Trainers collections
         let user = await User.findOne({ email });
+        let isTrainer = false;
 
         if (!user) {
-            return res.status(400).json({ message: "Invalid email or password" });
+            user = await Trainer.findOne({ email });
+            isTrainer = true;
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        if (!user) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        console.log("Stored Hash:", user.password);
+        console.log("Entered Password:", password);
+
+        // Compare the entered password with stored hash
+        const isMatch = bcrypt.compareSync(password, user.password);
+        console.log("Password Match:", isMatch);
+
         if (!isMatch) {
-            return res.status(400).json({ message: "Invalid email or password" });
+            return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        const payload = {
-            user: {
-                id: user.id,
-                role: user.role
-            }
-        };
+        // Generate JWT Token
+        const token = jwt.sign(
+            { id: user._id, role: isTrainer ? "trainer" : "user" },
+            process.env.JWT_SECRET,
+            { expiresIn: "2h" }
+        );
 
-        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" }, (err, token) => {
-            if (err) throw err;
-            res.json({
-                token,
-                user: {
-                    name: user.name,
-                    email: user.email,
-                    session_balance: user.session_balance,
-                    trial: user.trial
-                }
-            });
-        });
+        res.json({ token, role: isTrainer ? "trainer" : "user", user });
 
-    } catch (err) {
-        console.error("🚨 Login Error:", err);
+    } catch (error) {
+        console.error("Login error:", error);
         res.status(500).json({ message: "Server error" });
     }
 });
 
-// ✅ GET User Profile (Protected Route)
-router.get("/user", authMiddleware, async (req, res) => {
+// Get logged-in user details
+router.get("/me", authMiddleware, async (req, res) => {
     try {
-        console.log("🔹 Fetching user details...");
-
         const user = await User.findById(req.user.id).select("-password");
         if (!user) {
-            console.error("❌ User not found:", req.user.id);
-            return res.status(404).json({ message: "User not found" });
+            const trainer = await Trainer.findById(req.user.id).select("-password");
+            return trainer
+                ? res.json(trainer)
+                : res.status(404).json({ message: "User not found" });
         }
-
-        console.log("✅ User details retrieved:", user.email, "| Sessions:", user.session_balance);
-        
-        res.json({
-            name: user.name,
-            email: user.email,
-            session_balance: user.session_balance,
-            trial: user.trial
-        });
-
-    } catch (err) {
-        console.error("🚨 Error fetching user:", err);
-        res.status(500).json({ message: "Server error", error: err.message });
+        res.json(user);
+    } catch (error) {
+        console.error("Fetch user error:", error);
+        res.status(500).json({ message: "Server error" });
     }
 });
 
-// ✅ Ensure `router` is correctly exported
+// User and Trainer Registration
+router.post("/register", async (req, res) => {
+    try {
+        const { name, email, password, role, phone } = req.body;
+
+        if (!name || !email || !password || !role) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        let userExists = await User.findOne({ email });
+        let trainerExists = await Trainer.findOne({ email });
+
+        if (userExists || trainerExists) {
+            return res.status(400).json({ message: "User already exists" });
+        }
+
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        let newUser;
+
+        if (role === "trainer") {
+            newUser = new Trainer({
+                name,
+                email,
+                password: hashedPassword,
+                phone,
+                role: "trainer",
+                sessions_created: [],
+            });
+        } else {
+            newUser = new User({
+                name,
+                email,
+                password: hashedPassword,
+                role: "user",
+                session_balance: 1, // Give 1 free session
+            });
+        }
+
+        await newUser.save();
+        res.status(201).json({ message: "User registered successfully" });
+
+    } catch (error) {
+        console.error("Registration error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 module.exports = router;

@@ -1,36 +1,49 @@
-// src/controllers/userController.js
+const User = require('../models/userModel');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
-const userService = require('../services/userService');
-
-const getUserById = async (req, res) => {
+// ✅ User Login
+exports.loginUser = async (req, res) => {
   try {
-    const user = await userService.getUserById(req.params.id);
-    res.status(200).json(user);
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // ✅ Compare hashed password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+    res.status(200).json({ message: "Login successful", token, user });
   } catch (error) {
-    res.status(404).json({ error: 'User not found' });
+    console.error("❌ Error in loginUser:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-const updateUserLastLogin = async (req, res) => {
+// ✅ User Signup
+exports.signupUser = async (req, res) => {
   try {
-    const updatedUser = await userService.updateUserLastLogin(req.params.id);
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    res.status(404).json({ error: 'User not found' });
-  }
-};
+    const { name, email, password } = req.body;
 
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await userService.getAllUsers();
-    res.status(200).json(users);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: "User already exists" });
+    }
 
-module.exports = {
-  getUserById,
-  updateUserLastLogin,
-  getAllUsers,
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user = new User({ name, email, password: hashedPassword });
+    await user.save();
+
+    res.status(201).json({ message: "User registered successfully", user });
+  } catch (error) {
+    console.error("❌ Error in signupUser:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };

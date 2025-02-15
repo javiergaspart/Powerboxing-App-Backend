@@ -1,201 +1,50 @@
-// src/services/sessionService.js
+const { v4: uuidv4 } = require('uuid'); // Import UUID for unique session IDs
+const Session = require('../models/sessionModel');
 
-const Session = require('../models/Session');
-const mongoose = require('mongoose'); // Import mongoose
-
-// Create a new session
-const reserveOrCreateSession = async (req, res) => {
-  console.log("Request received:", req);
-
-  const { userId, slotTimings, location, date } = req;
-  console.log("Checking session for slotTimings:", slotTimings, "Location:", location, "Date:", date);
-
-  const normalizedSlotTimings = slotTimings.replace(/\s/g, ' ').trim();
-  const normalizedLocation = location.trim();
-  const normalizedDate = new Date(date); // Ensure correct date format
-
+exports.reserveOrCreateSession = async ({ trainerId, slots }) => {
   try {
-    // Check if a session with the same slot timings, location, and date exists
-    console.log("Searching for session with:", { slotTimings: normalizedSlotTimings, location: normalizedLocation, date: normalizedDate });
-    let session = await Session.findOne({ slotTimings: normalizedSlotTimings, location: normalizedLocation, date: normalizedDate });
+    console.log("✅ reserveOrCreateSession function called");
 
-    console.log("Session found:", session);
-
-    if (session) {
-      console.log('Session already exists:', session);
-
-      // If the user is already booked, return an error
-      if (session.bookedUsers.includes(userId)) {
-        return res.status(400).json({ message: 'User already reserved this session' });
-      }
-
-      // Check if slots are available
-      const totalSlots = 20; // Default total slots
-      if (session.bookedUsers.length >= totalSlots) {
-        return res.status(400).json({ message: 'No available slots for this session' });
-      }
-
-      // Reserve the slot for the user
-      session.bookedUsers.push(userId);
-      console.log("Saving session after adding user:", session.bookedUsers);
-      await session.save();
-
-      return res.status(200).json({ message: 'Reservation successful', session });
+    if (!trainerId || !slots || slots.length === 0) {
+      throw new Error("Trainer ID and slots are required.");
     }
 
-    // If no session exists, create a new session
-    console.log('No existing session found. Creating a new session.');
+    const newSessions = slots.map(slot => ({
+      session_id: uuidv4(), // ✅ Generates a unique session ID
+      trainerId,
+      timeSlot: slot,
+      participants: [],
+      createdAt: new Date(),
+    }));
 
-    session = new Session({
-      date: normalizedDate,
-      slotTimings: normalizedSlotTimings,
-      location: normalizedLocation,
-      instructor: 'Default Instructor',
-      bookedUsers: [userId],
-    });
+    await Session.insertMany(newSessions);
 
-    await session.save();
-
-    return res.status(200).json({ message: 'New session created and reservation successful', data: session });
+    console.log("✅ Sessions created successfully.");
+    return { message: "Sessions created successfully", sessions: newSessions };
   } catch (error) {
-    console.error('Error in reserveOrCreateSession:', error);
-    return res.status(500).json({ message: 'Failed to reserve or create session' });
+    console.error("❌ Error in reserveOrCreateSession:", error);
+    throw error;
   }
 };
 
-
-
-// Get all sessions
-const getSessions = async () => {
-  console.log('Fetching all sessions...');
+// ✅ Get all sessions
+exports.getSessions = async () => {
   try {
-    const sessions = await Session.find()
-      .populate('participants')
-      .populate('punchingBags');
-    console.log(`Fetched ${sessions.length} sessions.`);
-    return sessions;
+    return await Session.find();
   } catch (error) {
-    console.error('Error fetching sessions:', error);
-    throw new Error('Failed to retrieve sessions.');
+    console.error("❌ Error retrieving sessions:", error);
+    throw error;
   }
 };
 
-// Get upcoming sessions by location
-// Get upcoming sessions by location
-const getUpcomingSessions = async (req, res) => {
+// ✅ Check session availability
+exports.checkSessionAvailability = async (sessionId) => {
   try {
-    const { userId } = req.query; // Extract userId from route params
-
-    // Log userId for debugging    
-    if (!userId) {
-      return res.status(400).json({ success: false, message: "User ID is required" });
-    }
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ success: false, message: "Invalid User ID format" });
-    }
-
-    console.log('Fetching sessions for user ID:', userId);
-
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-
-    // Find sessions where the user is part of bookedUsers and sort by date
-    const sessions = await Session.find({
-      date: { $gte: new Date() }, // Fetch only upcoming sessions
-      bookedUsers: userObjectId, // Match sessions with this userId in bookedUsers
-    }).populate('bookedUsers').populate('punchingBags')
-      .sort({ date: 1 }); // Sort sessions by date in ascending order
-
-    // Log number of sessions fetched
-    console.log(`Fetched ${sessions.length} sessions for user ID: ${userId}`);
-
-    res.status(200).json({
-      success: true,
-      data: sessions,
-    });
-  } catch (error) {
-    // Log the error
-    console.error('Error fetching user sessions:', error);
-
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
-
-
-// Get previous sessions for a user
-const getPreviousSessions = async (req, res) => {
-  try {
-    const { userId } = req.query;  // Or req.body, depending on how you're sending the userId
-
-    if (!userId) {
-      return res.status(400).json({ success: false, message: "User ID is required" });
-    }
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ success: false, message: "Invalid User ID format" });
-    }
-
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-
-
-    // Log the current date for debugging
-    console.log('Current Date:', new Date());
-    
-    // Query to fetch previous sessions
-    const sessions = await Session.find({
-      date: { $lt: new Date() },  // Sessions that are in the past
-      bookedUsers: userObjectId,  // Ensure the user is a participant
-    }).populate('bookedUsers').populate('punchingBags');
-
-    // Log the result before sending the response
-    console.log('Fetched Sessions:', sessions);
-
-    if (sessions.length === 0) {
-      console.log(`No previous sessions found for user ${userId}`);
-    }
-
-    res.status(200).json({
-      success: true,
-      data: sessions,
-    });
-  } catch (error) {
-    console.error('Error fetching previous sessions:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
-
-const checkSessionAvailability = async (sessionId) => {
-  try {
-    // Validate session ID
-    if (!mongoose.Types.ObjectId.isValid(sessionId)) {
-      throw new Error('Invalid session ID');
-    }
-
     const session = await Session.findById(sessionId);
-
-    if (!session) {
-      throw new Error('Session not found');
-    }
-
-    // Calculate availability
-    const availableSlots = 20 - session.bookedUsers.length;
-    const isAvailable = availableSlots > 0;
-
-    return isAvailable;
+    return session && session.participants.length < session.maxParticipants;
   } catch (error) {
-    console.error('Error checking session availability:', error);
-    throw new Error(error.message || 'Failed to check session availability');
+    console.error("❌ Error checking session availability:", error);
+    throw error;
   }
 };
 
-module.exports = {
-  reserveOrCreateSession,
-  getSessions,
-  getUpcomingSessions,
-  getPreviousSessions,
-  checkSessionAvailability, // Add this line
-};

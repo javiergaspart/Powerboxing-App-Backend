@@ -1,20 +1,16 @@
-const express = require("express");
-const authMiddleware = require("../middlewares/authMiddleware");
-
+const express = require('express');
 const router = express.Router();
+const Session = require('../models/sessionModel'); // ✅ Ensure this model exists
 
-// ✅ SESSION START Route (Protected)
-router.post("/start", authMiddleware, async (req, res) => {
-    try {
-        console.log("🔹 Start session request received by:", req.user.id);
-
-        // Placeholder logic - replace with session handling logic
-        res.status(200).json({ message: "Session started successfully" });
-
-    } catch (err) {
-        console.error("🚨 Session Start Error:", err);
-        res.status(500).json({ message: "Server error", error: err.message });
-    }
+// GET: Fetch all sessions
+router.get('/', async (req, res) => {
+  try {
+    const sessions = await Session.find();
+    res.json(sessions);
+  } catch (error) {
+    console.error('❌ Error fetching sessions:', error);
+    res.status(500).json({ message: "Server error", error });
+  }
 });
 
 module.exports = router;
